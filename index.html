@@ -36,7 +36,7 @@
             font-weight: 800;
         }
 
-        /* --- MODE SWITCHER (NEW) --- */
+        /* --- MODE SWITCHER --- */
         .mode-switcher {
             display: flex;
             background: #fff;
@@ -178,7 +178,7 @@
             font-weight: 600;
             text-align: right;
             font-family: monospace;
-            white-space: pre-line; /* Allows multiline if needed */
+            white-space: pre-line;
         }
 
         /* List Container */
@@ -398,11 +398,10 @@
             window.addEventListener('resize', resizePreview);
         }
 
-        // --- NEW: MODE SWITCHER LOGIC ---
+        // --- MODE SWITCHER LOGIC ---
         function setMode(mode) {
             currentMode = mode;
             
-            // Toggle Button Styling
             document.getElementById('mode-tomorrow').classList.toggle('active', mode === 'tomorrow');
             document.getElementById('mode-weekend').classList.toggle('active', mode === 'weekend');
 
@@ -416,25 +415,25 @@
             const today = new Date();
 
             if (currentMode === 'tomorrow') {
-                // Logic: Tomorrow
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
+                // Logic: Start Date = Tomorrow, End Date = Day after Tomorrow
+                // Example: Today 04/02 -> Range: 05/02 - 06/02
                 
-                const dateStr = `${String(tomorrow.getDate()).padStart(2,'0')}/${String(tomorrow.getMonth()+1).padStart(2,'0')}`;
+                const startDate = new Date(today);
+                startDate.setDate(today.getDate() + 1);
+
+                const endDate = new Date(today);
+                endDate.setDate(today.getDate() + 2);
+
+                const startStr = `${String(startDate.getDate()).padStart(2,'0')}/${String(startDate.getMonth()+1).padStart(2,'0')}`;
+                const endStr = `${String(endDate.getDate()).padStart(2,'0')}/${String(endDate.getMonth()+1).padStart(2,'0')}`;
                 
-                dateDisplay.innerText = dateStr;
+                dateDisplay.innerText = `${startStr} - ${endStr}`;
                 subTitle.innerText = "明日可租用器材";
 
             } else {
                 // Logic: Next Weekend (Saturday & Sunday)
-                // Calculate days until Saturday
-                // 0=Sun, 6=Sat. 
-                const dayOfWeek = today.getDay();
+                const dayOfWeek = today.getDay(); // 0=Sun, 6=Sat
                 const daysUntilSat = (6 - dayOfWeek + 7) % 7; 
-                
-                // If today is Saturday (0 days away), we usually mean *this* weekend (today/tmr). 
-                // If today is Sunday, we usually mean *next* weekend.
-                // Let's stick to "Upcoming Saturday" logic.
                 
                 const satDate = new Date(today);
                 satDate.setDate(today.getDate() + daysUntilSat);
@@ -540,7 +539,7 @@
                 element.style.transform = currentTransform;
                 
                 const link = document.createElement('a');
-                // Dynamic filename based on mode
+                // Dynamic filename
                 const suffix = currentMode === 'tomorrow' ? 'Tomorrow' : 'Weekend';
                 link.download = `Gear_Avail_${suffix}.png`;
                 link.href = canvas.toDataURL("image/png");
