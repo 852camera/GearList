@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gear Availability Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* BRANDING */
+            --brand-main: #0f2f5d; 
+            --brand-dark: #071a36; 
+            --accent: #4cc9f0;
+            --text-on-brand: #ffffff;
+            --bg-page: #f4f6f8;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
+            padding: 20px 20px 100px 20px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { 
+            font-size: 1.2rem; 
+            text-align: center; 
+            margin-bottom: 20px; 
+            color: var(--brand-main); 
+            font-weight: 800;
+        }
+
+        /* --- MODE SWITCHER (NEW) --- */
+        .mode-switcher {
+            display: flex;
+            background: #fff;
+            padding: 5px;
+            border-radius: 50px;
+            box-shadow: 0 2px 8px rgba(15, 47, 93, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid #dce2e8;
+        }
+
+        .mode-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--brand-main);
+            color: white;
+            box-shadow: 0 2px 5px rgba(15, 47, 93, 0.2);
+        }
+
+        /* --- CONTROL PANEL --- */
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+
+        .category {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(15, 47, 93, 0.08);
+            border-left: 4px solid var(--brand-main);
+        }
+
+        .cat-title {
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--brand-main);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .item-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .gear-btn {
+            background: #fff;
+            border: 1px solid #dce2e8;
+            color: #555;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .gear-btn.active {
+            background: var(--brand-main);
+            color: white;
+            border-color: var(--brand-main);
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(15, 47, 93, 0.3);
+        }
+
+        /* --- PREVIEW SECTION --- */
+        .preview-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 50px;
+        }
+
+        .preview-container {
+            transform-origin: top center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        /* THE CANVAS (1080x1920) */
+        #story-canvas {
+            width: 1080px;
+            height: 1920px;
+            background: linear-gradient(165deg, var(--brand-main) 0%, var(--brand-dark) 100%);
+            color: var(--text-on-brand);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 80px;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        .story-header {
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-text h2 {
+            font-size: 70px;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0;
+            letter-spacing: -1px;
+            color: white;
+        }
+
+        .header-text span { color: var(--accent); }
+
+        .story-date {
+            font-size: 35px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            text-align: right;
+            font-family: monospace;
+            white-space: pre-line; /* Allows multiline if needed */
+        }
+
+        /* List Container */
+        .story-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            align-content: flex-start;
+        }
+
+        /* SMART LAYOUTS */
+        .story-list.layout-grid {
+            display: block;
+            column-count: 2;
+            column-gap: 60px;
+        }
+
+        .list-group-box {
+            break-inside: avoid;
+            margin-bottom: 30px;
+        }
+
+        .list-group-label {
+            font-size: 32px;
+            color: var(--accent);
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        .list-item {
+            font-size: 42px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .list-item::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-right: 15px;
+            margin-top: 4px;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Dense Mode */
+        .story-list.layout-dense .list-item {
+            font-size: 34px;
+            margin-bottom: 5px;
+        }
+        .story-list.layout-dense .list-group-label {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .story-list.layout-dense .list-group-box {
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        .story-footer {
+            margin-top: auto;
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .cta {
+            font-size: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 15px 50px;
+            border-radius: 50px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-weight: 600;
+        }
+        
+        .cta i { color: var(--accent); margin-right: 10px;}
+
+        /* --- ACTION BUTTONS --- */
+        .actions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: transform 0.1s;
+        }
+        
+        .action-btn:active { transform: translateX(-50%) scale(0.95); }
+
+        .btn-reset { background: white; color: var(--brand-main); }
+        .btn-download { 
+            background: var(--brand-main); 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>📸 Rental Gear Availability</h1>
+
+    <div class="mode-switcher">
+        <button class="mode-btn active" id="mode-tomorrow" onclick="setMode('tomorrow')">明日 (Tomorrow)</button>
+        <button class="mode-btn" id="mode-weekend" onclick="setMode('weekend')">本週末 (Weekend)</button>
+    </div>
+
+    <div class="controls" id="controls">
+        </div>
+
+    <div class="preview-wrapper">
+        <div class="preview-container" id="preview-container">
+            <div id="story-canvas">
+                <div class="story-header">
+                    <div class="header-text">
+                        <h2>852CAMERA<br><span id="header-subtitle">明日可租用器材</span></h2>
+                    </div>
+                    <div class="story-date" id="display-date"></div>
+                </div>
+                
+                <div class="story-list" id="story-list">
+                    <div style="font-size: 40px; color: rgba(255,255,255,0.3); text-align: center; margin-top: 400px;">
+                        Select items to generate list
+                    </div>
+                </div>
+
+                <div class="story-footer">
+                    <div class="cta">
+                        <i class="fab fa-instagram"></i> 立即DM留位預約
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="action-btn btn-reset" onclick="resetAll()">Clear All</button>
+        <button class="action-btn btn-download" onclick="downloadImage()">
+            <i class="fas fa-download"></i> Save Image
+        </button>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        const gearData = [
+            { group: "Samsung 電話", items: ["S24 Ultra", "S25 Ultra"] },
+            { group: "Vivo 電話", items: ["X200 Ultra + 攝影套裝", "X300 Pro + 攝影套裝"] },
+            { group: "Canon 相機機身", items: ["Canon R5", "Canon R5 Mark II", "Canon R6 Mark II", "Canon R6 Mark III"] },
+            { group: "Canon 鏡頭", items: ["EF 70-200mm f/2.8L II", "RF 70-200mm f/2.8L", "RF 100-500mm L", "RF 100-400mm", "RF 50mm f/1.8"] },
+            { group: "Sony 相機機身", items: ["Sony A7R V", "Sony A7C II"] },
+            { group: "Sony 鏡頭", items: ["FE 50-150mm F/2 GM", "FE 70-200 f/2.8 GM II", "FE 100-400 GM", "FE 200-600 G", "1.4x Teleconverter"] },
+            { group: "一體式旅行相機", items: ["Fujifilm X100VI", "Leica Q2"] }
+        ];
+
+        const selectedItems = new Set();
+        let currentMode = 'tomorrow'; // 'tomorrow' or 'weekend'
+
+        function init() {
+            const container = document.getElementById('controls');
+            
+            // Generate Buttons
+            gearData.forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category';
+                
+                const title = document.createElement('div');
+                title.className = 'cat-title';
+                title.innerText = cat.group;
+                
+                const grid = document.createElement('div');
+                grid.className = 'item-grid';
+
+                cat.items.forEach(item => {
+                    const btn = document.createElement('div');
+                    btn.className = 'gear-btn';
+                    btn.innerText = item;
+                    btn.onclick = () => toggleItem(btn, item, cat.group);
+                    grid.appendChild(btn);
+                });
+
+                catDiv.appendChild(title);
+                catDiv.appendChild(grid);
+                container.appendChild(catDiv);
+            });
+
+            // Set Initial Mode
+            updateDateAndTitle();
+
+            resizePreview();
+            window.addEventListener('resize', resizePreview);
+        }
+
+        // --- NEW: MODE SWITCHER LOGIC ---
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Toggle Button Styling
+            document.getElementById('mode-tomorrow').classList.toggle('active', mode === 'tomorrow');
+            document.getElementById('mode-weekend').classList.toggle('active', mode === 'weekend');
+
+            updateDateAndTitle();
+        }
+
+        function updateDateAndTitle() {
+            const dateDisplay = document.getElementById('display-date');
+            const subTitle = document.getElementById('header-subtitle');
+            
+            const today = new Date();
+
+            if (currentMode === 'tomorrow') {
+                // Logic: Tomorrow
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const dateStr = `${String(tomorrow.getDate()).padStart(2,'0')}/${String(tomorrow.getMonth()+1).padStart(2,'0')}`;
+                
+                dateDisplay.innerText = dateStr;
+                subTitle.innerText = "明日可租用器材";
+
+            } else {
+                // Logic: Next Weekend (Saturday & Sunday)
+                // Calculate days until Saturday
+                // 0=Sun, 6=Sat. 
+                const dayOfWeek = today.getDay();
+                const daysUntilSat = (6 - dayOfWeek + 7) % 7; 
+                
+                // If today is Saturday (0 days away), we usually mean *this* weekend (today/tmr). 
+                // If today is Sunday, we usually mean *next* weekend.
+                // Let's stick to "Upcoming Saturday" logic.
+                
+                const satDate = new Date(today);
+                satDate.setDate(today.getDate() + daysUntilSat);
+                
+                const sunDate = new Date(satDate);
+                sunDate.setDate(satDate.getDate() + 1);
+
+                const satStr = `${String(satDate.getDate()).padStart(2,'0')}/${String(satDate.getMonth()+1).padStart(2,'0')}`;
+                const sunStr = `${String(sunDate.getDate()).padStart(2,'0')}/${String(sunDate.getMonth()+1).padStart(2,'0')}`;
+                
+                dateDisplay.innerText = `${satStr} - ${sunStr}`;
+                subTitle.innerText = "本週末可租用器材";
+            }
+        }
+        // --------------------------------
+
+        function toggleItem(btn, itemName, groupName) {
+            btn.classList.toggle('active');
+            const key = JSON.stringify({ group: groupName, item: itemName });
+            if (selectedItems.has(key)) selectedItems.delete(key);
+            else selectedItems.add(key);
+            renderPreview();
+        }
+
+        function renderPreview() {
+            const listContainer = document.getElementById('story-list');
+            listContainer.innerHTML = '';
+            
+            const totalItems = selectedItems.size;
+            
+            listContainer.classList.remove('layout-grid', 'layout-dense');
+
+            if (totalItems > 18) {
+                listContainer.classList.add('layout-grid', 'layout-dense');
+            } else if (totalItems > 8) {
+                listContainer.classList.add('layout-grid');
+            }
+
+            if (totalItems === 0) {
+                listContainer.innerHTML = '<div style="font-size: 40px; color: rgba(255,255,255,0.3); text-align: center; margin-top: 400px;">Select items to generate list</div>';
+                return;
+            }
+
+            const groupedSelection = {};
+            Array.from(selectedItems).map(k => JSON.parse(k)).forEach(obj => {
+                if (!groupedSelection[obj.group]) groupedSelection[obj.group] = [];
+                groupedSelection[obj.group].push(obj.item);
+            });
+
+            gearData.forEach(cat => {
+                if (groupedSelection[cat.group]) {
+                    const groupBox = document.createElement('div');
+                    groupBox.className = 'list-group-box';
+
+                    const header = document.createElement('div');
+                    header.className = 'list-group-label';
+                    header.innerText = cat.group;
+                    groupBox.appendChild(header);
+
+                    groupedSelection[cat.group].forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'list-item';
+                        div.innerText = item;
+                        groupBox.appendChild(div);
+                    });
+
+                    listContainer.appendChild(groupBox);
+                }
+            });
+        }
+
+        function resetAll() {
+            selectedItems.clear();
+            document.querySelectorAll('.gear-btn').forEach(b => b.classList.remove('active'));
+            renderPreview();
+        }
+
+        function resizePreview() {
+            const container = document.getElementById('preview-container');
+            const canvas = document.getElementById('story-canvas');
+            const screenWidth = window.innerWidth;
+            
+            let scale = (screenWidth - 40) / 1080;
+            if (scale > 0.4) scale = 0.4;
+            
+            container.style.width = `${1080 * scale}px`;
+            container.style.height = `${1920 * scale}px`;
+            canvas.style.transform = `scale(${scale})`;
+            canvas.style.transformOrigin = 'top left';
+        }
+
+        function downloadImage() {
+            const element = document.getElementById("story-canvas");
+            const currentTransform = element.style.transform;
+            
+            element.style.transform = "scale(1)";
+            
+            html2canvas(element, {
+                scale: 1, 
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvas => {
+                element.style.transform = currentTransform;
+                
+                const link = document.createElement('a');
+                // Dynamic filename based on mode
+                const suffix = currentMode === 'tomorrow' ? 'Tomorrow' : 'Weekend';
+                link.download = `Gear_Avail_${suffix}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
