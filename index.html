@@ -11,12 +11,10 @@
         :root {
             /* CORE PALETTE */
             --brand-main: #0f2f5d; 
-            --brand-deep: #051429;
+            --brand-mid: #1b4b8f; /* Lighter navy for gradient bridge */
+            --brand-deep: #020b16; /* Near black for bottom */
             --neon-cyan: #00f2ff;
-            --neon-purple: #bd00ff;
             --text-white: #ffffff;
-            
-            /* UI */
             --bg-page: #eef2f5;
         }
 
@@ -41,7 +39,7 @@
             letter-spacing: 1px;
         }
 
-        /* --- MODE SWITCHER (Pill Style) --- */
+        /* --- MODE SWITCHER --- */
         .mode-container {
             background: #fff;
             padding: 6px;
@@ -73,7 +71,6 @@
 
         .mode-btn.active { color: white; }
 
-        /* Sliding Background for Switcher */
         .slider {
             position: absolute;
             top: 6px;
@@ -174,8 +171,11 @@
             width: 1080px;
             height: 1920px;
             position: relative;
-            /* Background: Deep Navy with Radial Glow */
-            background: radial-gradient(circle at 50% 0%, #1a4b8c 0%, var(--brand-deep) 60%);
+            /* UPDATED GRADIENT:
+               3-Stop Gradient (Highlight -> Brand -> Deep)
+               This smooths out transitions better than 2-stop.
+            */
+            background: radial-gradient(circle at 50% -10%, var(--brand-mid) 0%, var(--brand-main) 45%, var(--brand-deep) 100%);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -184,9 +184,8 @@
             padding: 80px;
         }
 
-        /* Decorative Grid Background */
-        #story-canvas::before {
-            content: '';
+        /* Clean Tech Grid (No Noise) */
+        .bg-grid {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background-image: 
@@ -257,10 +256,9 @@
             display: flex;
             flex-direction: column;
             gap: 25px;
-            align-content: flex-start; /* For wrapping */
+            align-content: flex-start;
         }
 
-        /* Layout Grid Logic */
         .story-list.layout-grid {
             display: block;
             column-count: 2;
@@ -270,7 +268,6 @@
         .list-group-box {
             break-inside: avoid;
             margin-bottom: 35px;
-            /* Glassmorphism Card for Groups */
             background: rgba(15, 47, 93, 0.4);
             border: 1px solid rgba(76, 201, 240, 0.3);
             border-radius: 20px;
@@ -310,7 +307,7 @@
         .story-list.layout-dense .list-group-label { font-size: 26px; }
         .story-list.layout-dense .list-group-box { padding: 20px; margin-bottom: 25px; }
 
-        /* Footer / Sticker */
+        /* Footer */
         .story-footer {
             position: relative;
             z-index: 10;
@@ -323,21 +320,21 @@
 
         .sticker-cta {
             background: var(--neon-cyan);
-            color: var(--brand-deep);
+            color: var(--brand-main);
             font-family: 'Oswald', sans-serif;
             font-size: 50px;
             font-weight: 700;
             padding: 20px 60px;
-            transform: rotate(-2deg); /* Tilted sticker look */
+            transform: rotate(-2deg);
             box-shadow: 0 15px 40px rgba(0, 242, 255, 0.3);
             text-transform: uppercase;
             display: flex;
             align-items: center;
             gap: 20px;
-            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); /* Slanted edges */
+            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
         }
 
-        /* --- ACTION BUTTONS (Floating) --- */
+        /* --- ACTION BUTTONS --- */
         .actions {
             position: fixed;
             bottom: 30px;
@@ -401,6 +398,7 @@
         <div class="preview-container" id="preview-container">
             <div id="story-canvas">
                 <div class="top-accent"></div>
+                <div class="bg-grid"></div>
                 
                 <div class="story-header">
                     <div class="brand-name">852CAMERA</div>
@@ -435,7 +433,6 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // Data
         const gearData = [
             { group: "電話", items: ["Samsung S24 Ultra", "Samsung S25 Ultra", "Vivo X200 Ultra 攝影套裝", "Vivo X300 Pro 攝影套裝"] },
             { group: "Canon 相機機身", items: ["Canon R5", "Canon R5 Mark II", "Canon R6 Mark II", "Canon R6 Mark III"] },
@@ -475,16 +472,13 @@
                 container.appendChild(catDiv);
             });
 
-            setMode('tomorrow'); // Default
+            setMode('tomorrow');
             resizePreview();
             window.addEventListener('resize', resizePreview);
         }
 
-        // --- UI LOGIC ---
         function setMode(mode) {
             currentMode = mode;
-            
-            // Slider Animation
             const slider = document.getElementById('mode-slider');
             const tmrBtn = document.getElementById('mode-tomorrow');
             const wkndBtn = document.getElementById('mode-weekend');
@@ -498,34 +492,28 @@
                 tmrBtn.classList.remove('active');
                 wkndBtn.classList.add('active');
             }
-
             updateDateAndTitle();
         }
 
         function updateDateAndTitle() {
             const dateDisplay = document.getElementById('display-date');
             const headerTitle = document.getElementById('header-title');
-            
             const today = new Date();
 
             if (currentMode === 'tomorrow') {
                 const startDate = new Date(today); startDate.setDate(today.getDate() + 1);
                 const endDate = new Date(today); endDate.setDate(today.getDate() + 2);
-
                 const sStr = `${String(startDate.getDate()).padStart(2,'0')}/${String(startDate.getMonth()+1).padStart(2,'0')}`;
                 const eStr = `${String(endDate.getDate()).padStart(2,'0')}/${String(endDate.getMonth()+1).padStart(2,'0')}`;
-                
                 dateDisplay.innerText = `${sStr} - ${eStr}`;
-                headerTitle.innerHTML = `明日<br><span>可租用器材</span>`;
+                headerTitle.innerHTML = `明天<br><span>可租用器材</span>`;
             } else {
                 const dayOfWeek = today.getDay(); 
                 const daysUntilSat = (6 - dayOfWeek + 7) % 7; 
                 const satDate = new Date(today); satDate.setDate(today.getDate() + daysUntilSat);
                 const sunDate = new Date(satDate); sunDate.setDate(satDate.getDate() + 1);
-
                 const satStr = `${String(satDate.getDate()).padStart(2,'0')}/${String(satDate.getMonth()+1).padStart(2,'0')}`;
                 const sunStr = `${String(sunDate.getDate()).padStart(2,'0')}/${String(sunDate.getMonth()+1).padStart(2,'0')}`;
-                
                 dateDisplay.innerText = `${satStr} - ${sunStr}`;
                 headerTitle.innerHTML = `本週末<br><span>可租用器材</span>`;
             }
@@ -544,7 +532,6 @@
             listContainer.innerHTML = '';
             
             const totalItems = selectedItems.size;
-            
             listContainer.classList.remove('layout-grid', 'layout-dense');
 
             if (totalItems > 18) {
@@ -572,20 +559,16 @@
                 if (groupedSelection[cat.group]) {
                     const groupBox = document.createElement('div');
                     groupBox.className = 'list-group-box';
-
                     const header = document.createElement('div');
                     header.className = 'list-group-label';
                     header.innerText = cat.group;
                     groupBox.appendChild(header);
-
                     groupedSelection[cat.group].forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'list-item';
-                        // Add little tech dot icon
                         div.innerHTML = `<i class="fas fa-square-full" style="font-size: 10px; transform: rotate(45deg);"></i> ${item}`;
                         groupBox.appendChild(div);
                     });
-
                     listContainer.appendChild(groupBox);
                 }
             });
@@ -601,10 +584,8 @@
             const container = document.getElementById('preview-container');
             const canvas = document.getElementById('story-canvas');
             const screenWidth = window.innerWidth;
-            
             let scale = (screenWidth - 40) / 1080;
             if (scale > 0.45) scale = 0.45;
-            
             container.style.width = `${1080 * scale}px`;
             container.style.height = `${1920 * scale}px`;
             canvas.style.transform = `scale(${scale})`;
@@ -615,14 +596,15 @@
             const element = document.getElementById("story-canvas");
             const currentTransform = element.style.transform;
             
+            // Temporarily reset scale for capture
             element.style.transform = "scale(1)";
             
             html2canvas(element, {
-                scale: 1, 
+                scale: 2, 
                 useCORS: true,
                 backgroundColor: null 
             }).then(canvas => {
-                element.style.transform = currentTransform;
+                element.style.transform = currentTransform; // Restore preview
                 const link = document.createElement('a');
                 link.download = `852Camera_List.png`;
                 link.href = canvas.toDataURL("image/png");
