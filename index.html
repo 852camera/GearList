@@ -555,6 +555,13 @@
                 groupedSelection[obj.group].push(obj.item);
             });
 
+            // --- NEW: SORT ITEMS ALPHABETICALLY ---
+            // This ensures that regardless of click order, items appear A-Z
+            Object.keys(groupedSelection).forEach(groupName => {
+                groupedSelection[groupName].sort((a, b) => a.localeCompare(b, 'zh-HK', { numeric: true }));
+            });
+            // --------------------------------------
+
             gearData.forEach(cat => {
                 if (groupedSelection[cat.group]) {
                     const groupBox = document.createElement('div');
@@ -563,6 +570,7 @@
                     header.className = 'list-group-label';
                     header.innerText = cat.group;
                     groupBox.appendChild(header);
+                    
                     groupedSelection[cat.group].forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'list-item';
