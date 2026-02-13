@@ -208,9 +208,10 @@
         .story-header {
             position: relative;
             z-index: 10;
-            margin-bottom: 60px;
+            margin-bottom: 40px; /* Reduced slightly to save space */
             border-left: 10px solid var(--neon-cyan);
             padding-left: 40px;
+            flex-shrink: 0; 
         }
 
         .brand-name {
@@ -255,8 +256,10 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
             align-content: flex-start;
+            transform-origin: top left; /* Important for scaling */
+            transition: transform 0.2s;
         }
 
         .story-list.layout-grid {
@@ -315,7 +318,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding-top: 40px;
+            padding-top: 20px;
+            padding-bottom: 40px; /* Ensure space at bottom */
+            flex-shrink: 0; 
         }
 
         .sticker-cta {
